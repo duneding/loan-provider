@@ -48,6 +48,7 @@ public class Main {
     }
 
     private static boolean isValidAmount(BigDecimal amount) {
+        //TODO: validate amount MOD 100
         return amount.compareTo(BigDecimal.valueOf(MIN_AMOUNT)) >= 0 &&
                 amount.compareTo(BigDecimal.valueOf(MAX_AMOUNT)) <= 0;
     }

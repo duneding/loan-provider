@@ -113,6 +113,19 @@ public class LoanProviderTest {
     }
 
     @Test
+    public void testMoreThanOneLenderWithOfferFirst() {
+        BigDecimal rateExpected = BigDecimal.valueOf(3.0);
+        BigDecimal amountRequestedExpected = BigDecimal.valueOf(1600);
+        List<LenderData> marketData = new ArrayList<LenderData>() {{
+            add(new LenderData("Martin", BigDecimal.valueOf(0.03), BigDecimal.valueOf(2000)));
+            add(new LenderData("Peter", BigDecimal.valueOf(0.06), BigDecimal.valueOf(500)));
+            add(new LenderData("John", BigDecimal.valueOf(0.05), BigDecimal.valueOf(1499)));
+        }};
+
+        assertLoanFor(marketData, rateExpected, amountRequestedExpected);
+    }
+
+    @Test
     public void testSeveralLendersButNotEnough() throws Exception {
         BigDecimal amountRequestedExpected = BigDecimal.valueOf(14000);
         List<LenderData> marketData = new ArrayList<LenderData>() {{
@@ -125,6 +138,29 @@ public class LoanProviderTest {
         }};
 
         assertLoanFor(marketData, amountRequestedExpected);
+    }
+
+    @Test
+    public void testSeveralLendersButAlmostOffer() throws Exception {
+        BigDecimal amountRequestedExpected = BigDecimal.valueOf(1000);
+        List<LenderData> marketData = new ArrayList<LenderData>() {{
+            add(new LenderData("Martin", BigDecimal.valueOf(0.03), BigDecimal.valueOf(500)));
+            add(new LenderData("Peter", BigDecimal.valueOf(0.06), BigDecimal.valueOf(499)));
+        }};
+
+        assertLoanFor(marketData, amountRequestedExpected);
+    }
+
+    @Test
+    public void testSeveralLendersWithAlmostNotEnough() throws Exception {
+        BigDecimal rateExpected = BigDecimal.valueOf(5.0);
+        BigDecimal amountRequestedExpected = BigDecimal.valueOf(1000);
+        List<LenderData> marketData = new ArrayList<LenderData>() {{
+            add(new LenderData("Martin", BigDecimal.valueOf(0.05), BigDecimal.valueOf(500)));
+            add(new LenderData("Peter", BigDecimal.valueOf(0.05), BigDecimal.valueOf(501)));
+        }};
+
+        assertLoanFor(marketData, rateExpected, amountRequestedExpected);
     }
 
     @Test
