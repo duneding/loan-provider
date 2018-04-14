@@ -1,6 +1,7 @@
 package org.zopa.loanprovider;
 
 import java.math.BigDecimal;
+import java.util.Optional;
 
 import static java.text.MessageFormat.format;
 
@@ -9,11 +10,11 @@ import static java.text.MessageFormat.format;
  */
 public class Printer {
 
-    public static void printLoanNotPossible() {
+    private static void printLoanNotPossible() {
         System.out.println("The market does not have sufficient offers from lenders to satisfy the loan");
     }
 
-    public static void printLoan(Loan loan) {
+    private static void printLoan(Loan loan) {
         BigDecimal rate = loan.getRate().multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
         BigDecimal monthlyPayment = loan.getMonthlyRepayment().setScale(2, BigDecimal.ROUND_CEILING);
         BigDecimal totalRepayment = loan.getTotalRepayment().setScale(2, BigDecimal.ROUND_CEILING);
@@ -25,5 +26,13 @@ public class Printer {
 
     public static void printError(String message) {
         System.out.println(format(message));
+    }
+
+    public static void printResult(Optional<Loan> loan) {
+        if (loan.isPresent()) {
+            printLoan(loan.get());
+        } else {
+            printLoanNotPossible();
+        }
     }
 }

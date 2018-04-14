@@ -1,15 +1,19 @@
 package org.zopa.loanprovider;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.zopa.loanprovider.HelpersTest.*;
 
 /**
  * Test loan calculator, data processor, file parsing, offers comparators.
@@ -17,49 +21,18 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 public class LoanProviderTest {
 
-    private String filePath;
+    private String marketDataFilePath;
+    @Rule
+    public ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setUp() {
-        filePath = getClass().getClassLoader().getResource("market.csv").getFile();
-    }
-
-    private void assertLoanFor(List<LenderData> marketData, BigDecimal amountRequestedExpected) {
-        assertLoanFor(marketData, null, amountRequestedExpected);
-    }
-
-    private void assertLoanFor(List<LenderData> marketData, BigDecimal rateExpected, BigDecimal amountRequestedExpected) {
-        MarketDataProcessor marketDataProcessor = new MarketDataProcessor(marketData);
-        Optional<Loan> loan = marketDataProcessor.findLoanFor(amountRequestedExpected, 36);
-
-        if (rateExpected == null) {
-            assertThat(loan).isEmpty();
-        } else {
-            assertThat(loan).isNotEmpty();
-            BigDecimal rate = roundRate(loan.get().getRate());
-            BigDecimal monthlyPayment = loan.get().getMonthlyRepayment();
-            BigDecimal totalRepayment = roundPayment(loan.get().getTotalRepayment());
-
-            assertThat(rate).isEqualTo(rateExpected);
-            assertThat(loan.get().getRequestedAmount()).isEqualTo(amountRequestedExpected);
-            assertThat(totalRepayment).isGreaterThan(amountRequestedExpected);
-
-            // Sanity check for monthly payment
-            assertThat(roundPayment(monthlyPayment.multiply(BigDecimal.valueOf(36)))).isEqualTo(totalRepayment);
-        }
-    }
-
-    private BigDecimal roundRate(BigDecimal rate) {
-        return rate.multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
-    }
-
-    private BigDecimal roundPayment(BigDecimal payment) {
-        return payment.setScale(2, BigDecimal.ROUND_CEILING);
+        marketDataFilePath = getClass().getClassLoader().getResource("market.csv").getFile();
     }
 
     @Test
-    public void testMainBaseCaseWithFile() throws IOException {
-        Optional<Loan> loan = Main.getLoan(filePath, new BigDecimal(1000));
+    public void testMainBaseCaseWithFile() throws IOException, ParseException {
+        Optional<Loan> loan = Main.getLoan(marketDataFilePath, new BigDecimal(1000));
         assertThat(loan.isPresent()).isTrue();
         BigDecimal rate = roundRate(loan.get().getRate());
         BigDecimal monthlyPayment = roundPayment(loan.get().getMonthlyRepayment());
@@ -71,16 +44,17 @@ public class LoanProviderTest {
     }
 
     @Test
-    public void testFileReaderWithData() throws IOException {
-        List<LenderData> lenders = FileReader.getMarketData(filePath);
+    public void testFileReaderWithData() throws IOException, ParseException {
+        List<LenderData> lenders = FileReader.getMarketData(marketDataFilePath);
         assertThat(lenders.size()).isEqualTo(7);
         assertThat(lenders.get(0).getName()).isNotEmpty();
         assertThat(lenders.get(0).getRate()).isGreaterThan(new BigDecimal(0));
         assertThat(lenders.get(0).getAvailable()).isNotNull();
     }
 
-    @Test(expected = IOException.class)
-    public void testFileReaderInvalidPath() throws IOException {
+    @Test
+    public void testFileReaderInvalidPath() throws IOException, ParseException {
+        exception.expect(IOException.class);
         FileReader.getMarketData("path/invalid");
     }
 
@@ -171,6 +145,19 @@ public class LoanProviderTest {
         assertThat(data.get(1).getName()).isEqualTo("Anna");
         assertThat(data.get(2).getName()).isEqualTo("Martin");
 
+    }
+
+    @Test
+    public void testMarketDaraFileCorrupted() throws IOException, ParseException {
+        String dataCorrupted = "Data not valid------....%!··%&/()-----Data not valid----¿?)=()=(\n --Data not valid.";
+        exception.expect(RuntimeException.class);
+        exception.expectMessage("Error reading market data file");
+        FileReader.getMarketData(createTemporalFile(dataCorrupted));
+    }
+
+    @Test
+    public void testMarketDaraFileEmpty() throws IOException, ParseException {
+        assertThat(FileReader.getMarketData(createTemporalFile())).isEmpty();
     }
 
 }

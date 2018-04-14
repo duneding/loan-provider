@@ -24,21 +24,17 @@ public class FileReader {
      * @return
      * @throws IOException
      */
-    public static List<LenderData> getMarketData(String filePath) throws IOException {
+    public static List<LenderData> getMarketData(String filePath) throws IOException, ParseException {
         List<LenderData> lenders;
-        try {
-            File file = new File(filePath);
-            InputStream inputFS = new FileInputStream(file);
-            BufferedReader buffer = new BufferedReader(new InputStreamReader(inputFS));
-            lenders = buffer.lines()
-                    .skip(1) //Skip Header
-                    .map(mapToLender)
-                    .collect(Collectors.toList());
-            buffer.close();
-            return lenders;
-        } catch (IOException e) {
-            throw e;
-        }
+        File file = new File(filePath);
+        InputStream inputFS = new FileInputStream(file);
+        BufferedReader buffer = new BufferedReader(new InputStreamReader(inputFS));
+        lenders = buffer.lines()
+                .skip(1) //Skip Header
+                .map(mapToLender)
+                .collect(Collectors.toList());
+        buffer.close();
+        return lenders;
     }
 
     private static ThrowingFunction<String, LenderData> mapToLender = (line) -> {
