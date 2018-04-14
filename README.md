@@ -5,6 +5,9 @@ Zopa Loan Provider
 * Java 8
 * Setting the JAVA_HOME Variable
 
+### Test
+>  ./gradlew check
+
 ### Build
 >  ./gradlew build
 
