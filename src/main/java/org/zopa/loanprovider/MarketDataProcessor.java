@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Created by mdagostino on 4/13/18.
  * Currently only provide a single datasource (file).
  * The idea is enable get data from other sources.
  */
@@ -16,7 +15,6 @@ public class MarketDataProcessor {
     private final List<LenderData> marketData;
 
     public MarketDataProcessor(List<LenderData> marketData) {
-        // TODO: ImmutableList.copyOf
         this.marketData = marketData;
     }
 
@@ -39,6 +37,13 @@ public class MarketDataProcessor {
 
     }
 
+    /**
+     * Collect all lenders until get the amount requested.
+     *
+     * @param amountRequested
+     * @param months
+     * @return
+     */
     private Loan calculateLoanFor(BigDecimal amountRequested, int months) {
         BigDecimal amountCollector = new BigDecimal(0);
         Map<LenderData, BigDecimal> lendersCollector = new HashMap<>();
@@ -70,6 +75,13 @@ public class MarketDataProcessor {
         return new Loan(amountRequested, loanRate, monthtlyPayment, totalRepayment);
     }
 
+    /**
+     * Money-Weighted Rate calculator.
+     *
+     * @param lendersCollector
+     * @param amountRequested
+     * @return
+     */
     private BigDecimal calculateShareRate(Map<LenderData, BigDecimal> lendersCollector, BigDecimal amountRequested) {
         return lendersCollector
                 .entrySet()
@@ -78,6 +90,13 @@ public class MarketDataProcessor {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
+    /**
+     * French method to amortizing loan (monthly payment fixed).
+     *
+     * @param rate
+     * @param amount
+     * @return
+     */
     private BigDecimal calculateMonthlyPayment(BigDecimal rate, BigDecimal amount) {
         double periodicRate = rate.doubleValue() / 12;
         double pow = Math.pow(1 + periodicRate, 3 * 12);

@@ -3,7 +3,8 @@ package org.zopa.loanprovider;
 import java.math.BigDecimal;
 
 /**
- * Created by mdagostino on 4/13/18.
+ * DTO for lenders data.
+ *
  */
 public class LenderData {
 

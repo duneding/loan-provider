@@ -3,7 +3,7 @@ package org.zopa.loanprovider;
 import java.math.BigDecimal;
 
 /**
- * Created by mdagostino on 4/13/18.
+ * DTO to store all information required for a Loan offer.
  */
 public class Loan {
 

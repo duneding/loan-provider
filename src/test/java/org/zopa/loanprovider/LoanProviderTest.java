@@ -127,4 +127,24 @@ public class LoanProviderTest {
         assertLoanFor(marketData, amountRequestedExpected);
     }
 
+    @Test
+    public void testLoanComparator() {
+        List<LenderData> data = new ArrayList<LenderData>() {{
+            add(new LenderData("Martin", BigDecimal.valueOf(0.06), BigDecimal.valueOf(4320)));
+            add(new LenderData("Peter", BigDecimal.valueOf(0.03), BigDecimal.valueOf(608)));
+            add(new LenderData("Anna", BigDecimal.valueOf(0.05), BigDecimal.valueOf(1200)));
+        }};
+
+        assertThat(data.get(0).getName()).isEqualTo("Martin");
+        assertThat(data.get(1).getName()).isEqualTo("Peter");
+        assertThat(data.get(2).getName()).isEqualTo("Anna");
+
+        data.sort(LoanComparator.byRate);
+
+        assertThat(data.get(0).getName()).isEqualTo("Peter");
+        assertThat(data.get(1).getName()).isEqualTo("Anna");
+        assertThat(data.get(2).getName()).isEqualTo("Martin");
+
+    }
+
 }

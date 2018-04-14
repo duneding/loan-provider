@@ -6,7 +6,7 @@ import java.math.RoundingMode;
 import static java.text.MessageFormat.format;
 
 /**
- * Created by mdagostino on 4/14/18.
+ * Centralize all message interface between users and calculator
  */
 public class Printer {
 
@@ -22,5 +22,9 @@ public class Printer {
         System.out.println(format("Rate: {0}%", rate));
         System.out.println(format("Monthly repayment: £{0}", monthlyPayment));
         System.out.println(format("Total repayment: £{0}", totalRepayment));
+    }
+
+    public static void printError(String message) {
+        System.out.println(format(message));
     }
 }

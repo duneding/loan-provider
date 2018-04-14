@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Created by mdagostino on 4/13/18.
+ * Reader component to map a lenders list.
  */
 public class FileReader {
 
