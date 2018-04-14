@@ -1,4 +1,4 @@
-# loan-provider
+# Loan calculator
 Zopa Loan Provider
 
 ### Requirements
