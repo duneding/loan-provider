@@ -1,41 +1,39 @@
 package org.zopa.loanprovider;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
+import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
+import static java.text.MessageFormat.format;
 
 /**
  * Created by mdagostino on 4/13/18.
  */
 public class Main {
 
-    private static int months = 36; //Default
-    private final static String CONFIG_FILE = "config.properties";
-    private final static Logger logger = Logger.getLogger("consoleAppender");
+    //It should be config from file or other source to be more flexible
+    private static int DEFAULT_MONTHS = 36;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
 
         if (args.length == 2) {
-
-            Properties properties = getConfiguration();
-            months = Integer.valueOf(properties.get("months").toString());
 
             final String marketFileParam = args[0];
             final BigDecimal loanAmountParam = new BigDecimal(args[1]);
 
-            Optional<Loan> loan = getLoan(marketFileParam, loanAmountParam);
-
-            if (loan.isPresent()) {
-                Printer.printLoan(loan.get());
-            } else {
-                Printer.printLoanNotPossible();
+            try {
+                Optional<Loan> loan = getLoan(marketFileParam, loanAmountParam);
+                if (loan.isPresent()) {
+                    Printer.printLoan(loan.get());
+                } else {
+                    Printer.printLoanNotPossible();
+                }
+            } catch (IOException e) {
+                //It should use a logging library (ej. log4j)
+                System.out.println(format("Error loading market data"));
+                //throw e;
             }
 
         } else {
@@ -44,34 +42,10 @@ public class Main {
 
     }
 
-    public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) {
-        MarketDataProcessor processor = new MarketDataProcessor(marketFile);
-        return processor.findLoanFor(amount, months);
-    }
-
-    private static Properties getConfiguration() {
-        Properties prop = new Properties();
-        InputStream input = null;
-
-        try {
-            final String filePath = Main.class.getClassLoader().getResource(CONFIG_FILE).getFile();
-            input = new FileInputStream(filePath);
-            prop.load(input);
-        } catch (FileNotFoundException ex) {
-            logger.log(Level.CONFIG, "Configuration file not found", ex);
-        } catch (IOException ex) {
-            logger.log(Level.CONFIG, "I/O error", ex);
-        } finally {
-            if (input != null) {
-                try {
-                    input.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-
-        return prop;
+    public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException {
+        List<LenderData> marketData = FileReader.getMarketData(marketFile);
+        MarketDataProcessor processor = new MarketDataProcessor(marketData);
+        return processor.findLoanFor(amount, DEFAULT_MONTHS);
     }
 
 }

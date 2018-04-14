@@ -3,12 +3,10 @@ package org.zopa.loanprovider;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.util.ArrayList;
+import java.text.ParseException;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
-import static java.text.MessageFormat.format;
 
 /**
  * Created by mdagostino on 4/13/18.
@@ -17,8 +15,17 @@ public class FileReader {
 
     private static final String COMMA = ",";
 
-    public static List<LenderData> getMarketData(String filePath) {
-        List<LenderData> lenders = new ArrayList<>();
+    /**
+     * Read data from file I/O saved on filesystem.
+     * Because it is a simple console app, assumes it wouldn't necessary use some Async and non-Blocking I/O implementation.
+     * However in case of handle lots of data and/or a different data source async mechanics will be a must.
+     *
+     * @param filePath
+     * @return
+     * @throws IOException
+     */
+    public static List<LenderData> getMarketData(String filePath) throws IOException {
+        List<LenderData> lenders;
         try {
             File file = new File(filePath);
             InputStream inputFS = new FileInputStream(file);
@@ -28,19 +35,36 @@ public class FileReader {
                     .map(mapToLender)
                     .collect(Collectors.toList());
             buffer.close();
+            return lenders;
         } catch (IOException e) {
-            System.out.println(format("Error proccesing market file: {0}", e.getMessage()));
+            throw e;
         }
-
-        return lenders;
     }
 
-    private static Function<String, LenderData> mapToLender = (line) -> {
+    private static ThrowingFunction<String, LenderData> mapToLender = (line) -> {
         String[] values = line.split(COMMA);
-        String name = values[0];
-        BigDecimal rate = new BigDecimal(values[1]);
-        BigDecimal amount = new BigDecimal(values[2]);
-        LenderData item = new LenderData(name, rate, amount);
-        return item;
+        if (values.length == 3) {
+            String name = values[0];
+            BigDecimal rate = new BigDecimal(values[1]);
+            BigDecimal amount = new BigDecimal(values[2]);
+            return new LenderData(name, rate, amount);
+        } else {
+            throw new ParseException("Error reading market data file.", 0);
+        }
     };
+
+    @FunctionalInterface
+    public interface ThrowingFunction<T, R> extends Function<T, R> {
+
+        @Override
+        default R apply(T t) {
+            try {
+                return applyThrows(t);
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+        R applyThrows(T t) throws ParseException;
+    }
 }

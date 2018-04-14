@@ -15,9 +15,9 @@ public class MarketDataProcessor {
 
     private final List<LenderData> marketData;
 
-    public MarketDataProcessor(String filePath) {
+    public MarketDataProcessor(List<LenderData> marketData) {
         // TODO: ImmutableList.copyOf
-        marketData = FileReader.getMarketData(filePath);
+        this.marketData = marketData;
     }
 
     public Optional<Loan> findLoanFor(BigDecimal amount, int months) {
