@@ -1,7 +1,6 @@
 package org.zopa.loanprovider;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 
 import static java.text.MessageFormat.format;
 
@@ -15,9 +14,9 @@ public class Printer {
     }
 
     public static void printLoan(Loan loan) {
-        BigDecimal rate = loan.getRate().multiply(BigDecimal.valueOf(100)).setScale(1, RoundingMode.CEILING);
-        BigDecimal monthlyPayment = loan.getMonthlyRepayment().setScale(2, RoundingMode.CEILING);
-        BigDecimal totalRepayment = loan.getTotalRepayment().setScale(2, RoundingMode.CEILING);
+        BigDecimal rate = loan.getRate().multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
+        BigDecimal monthlyPayment = loan.getMonthlyRepayment().setScale(2, BigDecimal.ROUND_CEILING);
+        BigDecimal totalRepayment = loan.getTotalRepayment().setScale(2, BigDecimal.ROUND_CEILING);
         System.out.println(format("Requested amount: £{0}", loan.getRequestedAmount()));
         System.out.println(format("Rate: {0}%", rate));
         System.out.println(format("Monthly repayment: £{0}", monthlyPayment));

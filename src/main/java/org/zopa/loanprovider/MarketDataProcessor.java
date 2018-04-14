@@ -70,7 +70,7 @@ public class MarketDataProcessor {
 
 
         BigDecimal loanRate = calculateShareRate(lendersCollector, amountRequested);
-        BigDecimal monthtlyPayment = calculateMonthlyPayment(loanRate, amountRequested);
+        BigDecimal monthtlyPayment = calculateMonthlyPayment(loanRate, amountRequested, months);
         BigDecimal totalRepayment = monthtlyPayment.multiply(BigDecimal.valueOf(months));
         return new Loan(amountRequested, loanRate, monthtlyPayment, totalRepayment);
     }
@@ -86,7 +86,7 @@ public class MarketDataProcessor {
         return lendersCollector
                 .entrySet()
                 .stream()
-                .map(data -> data.getValue().divide(amountRequested).multiply(data.getKey().getRate()))
+                .map(data -> data.getValue().divide(amountRequested, BigDecimal.ROUND_HALF_DOWN).multiply(data.getKey().getRate()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
@@ -97,10 +97,12 @@ public class MarketDataProcessor {
      * @param amount
      * @return
      */
-    private BigDecimal calculateMonthlyPayment(BigDecimal rate, BigDecimal amount) {
-        double periodicRate = rate.doubleValue() / 12;
-        double pow = Math.pow(1 + periodicRate, 3 * 12);
-        BigDecimal factor = new BigDecimal((pow * periodicRate) / (pow - 1));
+    private BigDecimal calculateMonthlyPayment(BigDecimal rate, BigDecimal amount, int months) {
+        BigDecimal periodicRate = rate.divide(BigDecimal.valueOf(12), BigDecimal.ROUND_CEILING);
+        BigDecimal pow = periodicRate.add(BigDecimal.valueOf(1)).pow(months);
+        BigDecimal factor = pow
+                .multiply(periodicRate)
+                .divide(pow.subtract(BigDecimal.valueOf(1)), BigDecimal.ROUND_CEILING);
         return amount.multiply(factor);
     }
 

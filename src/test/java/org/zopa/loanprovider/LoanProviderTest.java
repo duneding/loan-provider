@@ -5,7 +5,6 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -13,8 +12,9 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Created by mdagostino on 4/13/18.
+ * Test loan calculator, data processor, file parsing, offers comparators.
  */
+
 public class LoanProviderTest {
 
     private String filePath;
@@ -36,25 +36,38 @@ public class LoanProviderTest {
             assertThat(loan).isEmpty();
         } else {
             assertThat(loan).isNotEmpty();
-            assertThat(loan.get().getRate()).isEqualTo(rateExpected);
+            BigDecimal rate = roundRate(loan.get().getRate());
+            BigDecimal monthlyPayment = loan.get().getMonthlyRepayment();
+            BigDecimal totalRepayment = roundPayment(loan.get().getTotalRepayment());
+
+            assertThat(rate).isEqualTo(rateExpected);
             assertThat(loan.get().getRequestedAmount()).isEqualTo(amountRequestedExpected);
-            assertThat(loan.get().getTotalRepayment()).isGreaterThan(amountRequestedExpected);
+            assertThat(totalRepayment).isGreaterThan(amountRequestedExpected);
 
             // Sanity check for monthly payment
-            BigDecimal totalRepayment = loan.get().getTotalRepayment();
-            assertThat(loan.get().getMonthlyRepayment().multiply(BigDecimal.valueOf(36))).isEqualTo(totalRepayment);
+            assertThat(roundPayment(monthlyPayment.multiply(BigDecimal.valueOf(36)))).isEqualTo(totalRepayment);
         }
+    }
+
+    private BigDecimal roundRate(BigDecimal rate) {
+        return rate.multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
+    }
+
+    private BigDecimal roundPayment(BigDecimal payment) {
+        return payment.setScale(2, BigDecimal.ROUND_CEILING);
     }
 
     @Test
     public void testMainBaseCaseWithFile() throws IOException {
         Optional<Loan> loan = Main.getLoan(filePath, new BigDecimal(1000));
         assertThat(loan.isPresent()).isTrue();
-        BigDecimal rate = loan.get().getRate().multiply(BigDecimal.valueOf(100)).setScale(1, RoundingMode.FLOOR);
-        assertThat(rate).isEqualTo(BigDecimal.valueOf(7.0));
-        assertThat(loan.get().getMonthlyRepayment().setScale(2, RoundingMode.CEILING)).isEqualTo(BigDecimal.valueOf(30.88));
+        BigDecimal rate = roundRate(loan.get().getRate());
+        BigDecimal monthlyPayment = roundPayment(loan.get().getMonthlyRepayment());
+        BigDecimal totalRepayment = roundPayment(loan.get().getTotalRepayment());
+        assertThat(rate).isEqualTo(BigDecimal.valueOf(7.1));
+        assertThat(monthlyPayment).isEqualTo(BigDecimal.valueOf(30.97));
         assertThat(loan.get().getRequestedAmount()).isEqualTo(BigDecimal.valueOf(1000));
-        assertThat(loan.get().getTotalRepayment().setScale(2, RoundingMode.CEILING)).isEqualTo(BigDecimal.valueOf(1111.65));
+        assertThat(totalRepayment).isEqualTo(BigDecimal.valueOf(1114.88));
     }
 
     @Test
@@ -90,10 +103,10 @@ public class LoanProviderTest {
 
     @Test
     public void testJustOneLenderWithOffer() {
-        BigDecimal rateExpected = BigDecimal.valueOf(0.05);
+        BigDecimal rateExpected = BigDecimal.valueOf(5.0);
         BigDecimal amountRequestedExpected = BigDecimal.valueOf(1500);
         List<LenderData> marketData = new ArrayList<LenderData>() {{
-            add(new LenderData("Martin", rateExpected, BigDecimal.valueOf(3000)));
+            add(new LenderData("Martin", BigDecimal.valueOf(0.05), BigDecimal.valueOf(3000)));
         }};
 
         assertLoanFor(marketData, rateExpected, amountRequestedExpected);
@@ -101,12 +114,25 @@ public class LoanProviderTest {
 
     @Test
     public void testMoreThanOneLenderWithOffer() {
-        BigDecimal rateExpected = BigDecimal.valueOf(0.022);
+        BigDecimal rateExpected = BigDecimal.valueOf(2.0);
         BigDecimal amountRequestedExpected = BigDecimal.valueOf(1500);
         List<LenderData> marketData = new ArrayList<LenderData>() {{
             add(new LenderData("Martin", BigDecimal.valueOf(0.03), BigDecimal.valueOf(400)));
             add(new LenderData("Peter", BigDecimal.valueOf(0.06), BigDecimal.valueOf(60)));
             add(new LenderData("John", BigDecimal.valueOf(0.02), BigDecimal.valueOf(1200)));
+        }};
+
+        assertLoanFor(marketData, rateExpected, amountRequestedExpected);
+    }
+
+    @Test
+    public void testMoreThanOneLenderWithOfferWithLowBalance() {
+        BigDecimal rateExpected = BigDecimal.valueOf(2.0);
+        BigDecimal amountRequestedExpected = BigDecimal.valueOf(15000);
+        List<LenderData> marketData = new ArrayList<LenderData>() {{
+            add(new LenderData("Martin", BigDecimal.valueOf(0.03), BigDecimal.valueOf(0.5)));
+            add(new LenderData("Peter", BigDecimal.valueOf(0.06), BigDecimal.valueOf(0.5)));
+            add(new LenderData("John", BigDecimal.valueOf(0.02), BigDecimal.valueOf(14999)));
         }};
 
         assertLoanFor(marketData, rateExpected, amountRequestedExpected);
