@@ -2,7 +2,6 @@ package org.zopa.loanprovider;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,12 +19,18 @@ public class Main {
     private static int MIN_AMOUNT = 1000;
     private static int MAX_AMOUNT = 15000;
 
-    public static void main(String[] args) throws IOException, ParseException {
+    public static void main(String[] args) {
 
         if (args.length == 2) {
 
             final String marketFileParam = args[0];
-            final BigDecimal loanAmountParam = new BigDecimal(args[1]);
+            final BigDecimal loanAmountParam;
+            try {
+                loanAmountParam = new BigDecimal(args[1]);
+            } catch (NumberFormatException e) {
+                Printer.printError("Amount parameter must be a number");
+                throw new NumberFormatException();
+            }
 
             if (isValidAmount(loanAmountParam) && isBetweenMinMax(loanAmountParam)) {
                 try {
@@ -34,7 +39,7 @@ public class Main {
                 } catch (IOException e) {
                     //It should use a logging library (ej. log4j)
                     Printer.printError("Error loading market data");
-                } catch (ParseException e) {
+                } catch (RuntimeException e) {
                     Printer.printError("Error reading market data file");
                 }
             } else {
@@ -57,7 +62,7 @@ public class Main {
         return amount.remainder(BigDecimal.valueOf(100)) == BigDecimal.valueOf(0);
     }
 
-    public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException, ParseException {
+    public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException {
         List<LenderData> marketData = FileReader.getMarketData(marketFile);
         MarketDataProcessor processor = new MarketDataProcessor(marketData);
         return processor.findLoanFor(amount, DEFAULT_MONTHS);

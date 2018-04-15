@@ -64,7 +64,7 @@ public class HelpersTest {
         return temporaryFile.getPath();
     }
 
-    public static void assertErrorConsoleMessages(String error, String[] args) throws IOException, ParseException {
+    public static void assertErrorConsoleMessages(String error, String[] args) throws IOException {
         StringBuffer sb = new StringBuffer();
         sb.append(error);
         String expectedErrorMessage = sb.toString();

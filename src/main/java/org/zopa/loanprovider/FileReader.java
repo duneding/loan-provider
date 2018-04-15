@@ -24,7 +24,7 @@ public class FileReader {
      * @return
      * @throws IOException
      */
-    public static List<LenderData> getMarketData(String filePath) throws IOException, ParseException {
+    public static List<LenderData> getMarketData(String filePath) throws IOException {
         List<LenderData> lenders;
         File file = new File(filePath);
         InputStream inputFS = new FileInputStream(file);
