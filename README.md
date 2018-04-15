@@ -29,3 +29,4 @@ __[amount]__: request to calculate a loan.
 * The market data file is never damaged (it still detects exceptions).
 * The market data file is never damaged (it still detects exceptions).
 * Money-Weighted Rate in order to each lender amount.
+* App do not update the file with the available amount. Assumes delegate to external system.
