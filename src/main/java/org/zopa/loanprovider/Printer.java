@@ -15,17 +15,17 @@ public class Printer {
     }
 
     private static void printLoan(Loan loan) {
-        BigDecimal rate = loan.getRate().multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
+        BigDecimal rate = loan.getRate().multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_FLOOR);
         BigDecimal monthlyPayment = loan.getMonthlyRepayment().setScale(2, BigDecimal.ROUND_CEILING);
         BigDecimal totalRepayment = loan.getTotalRepayment().setScale(2, BigDecimal.ROUND_CEILING);
-        System.out.println(format("Requested amount: £{0}", loan.getRequestedAmount()));
-        System.out.println(format("Rate: {0}%", rate));
-        System.out.println(format("Monthly repayment: £{0}", monthlyPayment));
-        System.out.println(format("Total repayment: £{0}", totalRepayment));
+        System.out.println(format("Requested amount: £{0}", loan.getRequestedAmount().toString()));
+        System.out.println(format("Rate: {0}%", rate.toString()));
+        System.out.println(format("Monthly repayment: £{0}", monthlyPayment.toString()));
+        System.out.println(format("Total repayment: £{0}", totalRepayment.toString()));
     }
 
     public static void printError(String message) {
-        System.out.println(format(message));
+        System.err.println(format(message));
     }
 
     public static void printResult(Optional<Loan> loan) {

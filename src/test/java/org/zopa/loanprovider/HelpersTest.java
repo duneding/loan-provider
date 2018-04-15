@@ -1,10 +1,8 @@
 package org.zopa.loanprovider;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,7 +40,7 @@ public class HelpersTest {
     }
 
     public static BigDecimal roundRate(BigDecimal rate) {
-        return rate.multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_CEILING);
+        return rate.multiply(BigDecimal.valueOf(100)).setScale(1, BigDecimal.ROUND_FLOOR);
     }
 
     public static BigDecimal roundPayment(BigDecimal payment) {
@@ -64,6 +62,16 @@ public class HelpersTest {
 
         temporaryFile.deleteOnExit();
         return temporaryFile.getPath();
+    }
+
+    public static void assertErrorConsoleMessages(String error, String[] args) throws IOException, ParseException {
+        StringBuffer sb = new StringBuffer();
+        sb.append(error);
+        String expectedErrorMessage = sb.toString();
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setErr(new PrintStream(outContent));
+        Main.main(args);
+        assertThat(outContent.toString()).contains(expectedErrorMessage);
     }
 
 }

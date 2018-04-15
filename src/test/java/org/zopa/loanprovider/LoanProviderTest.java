@@ -18,7 +18,6 @@ import static org.zopa.loanprovider.HelpersTest.*;
 /**
  * Test loan calculator, data processor, file parsing, offers comparators.
  */
-
 public class LoanProviderTest {
 
     private String marketDataFilePath;
@@ -37,10 +36,52 @@ public class LoanProviderTest {
         BigDecimal rate = roundRate(loan.get().getRate());
         BigDecimal monthlyPayment = roundPayment(loan.get().getMonthlyRepayment());
         BigDecimal totalRepayment = roundPayment(loan.get().getTotalRepayment());
-        assertThat(rate).isEqualTo(BigDecimal.valueOf(7.1));
-        assertThat(monthlyPayment).isEqualTo(BigDecimal.valueOf(30.97));
+        assertThat(rate).isEqualTo(BigDecimal.valueOf(7.0));
+        assertThat(monthlyPayment).isEqualTo(BigDecimal.valueOf(30.88));
         assertThat(loan.get().getRequestedAmount()).isEqualTo(BigDecimal.valueOf(1000));
-        assertThat(totalRepayment).isEqualTo(BigDecimal.valueOf(1114.88));
+        assertThat(totalRepayment).isEqualTo(BigDecimal.valueOf(1111.65));
+    }
+
+    @Test
+    public void testPassingWrongNumberOfInputs() throws IOException, ParseException {
+        String[] args = {"one"};
+        assertErrorConsoleMessages("Parameters provided must be 2: [market file] [loan amount]", args);
+    }
+
+    @Test
+    public void testPassingInvalidIncrementAmountInput() throws IOException, ParseException {
+        String[] args = {"path.mock", "113"};
+        assertErrorConsoleMessages("Amount requested must be for 100 increment", args);
+    }
+
+    @Test
+    public void testPassingInvalidBandAmountInputForHigh() throws IOException, ParseException {
+        String[] args = {"path.mock", "20000"};
+        assertErrorConsoleMessages("Amount requested must be between 1000 and 15000", args);
+    }
+
+    @Test
+    public void testPassingInvalidBandAmountInputForLow() throws IOException, ParseException {
+        String[] args = {"path.mock", "20"};
+        assertErrorConsoleMessages("Amount requested must be between 1000 and 15000", args);
+    }
+
+    @Test
+    public void testPassingNegativeAmount() throws IOException, ParseException {
+        String[] args = {"path.mock", "-1"};
+        assertErrorConsoleMessages("Amount requested must be between 1000 and 15000", args);
+    }
+
+    @Test
+    public void testPassingDecimalAmount() throws IOException, ParseException {
+        String[] args = {"path.mock", "1000.50"};
+        assertErrorConsoleMessages("Amount requested must be between 1000 and 15000", args);
+    }
+
+    @Test
+    public void testInvalidAmountInputResultEmpty() throws IOException, ParseException {
+        Optional<Loan> loan = Main.getLoan(marketDataFilePath, new BigDecimal(113));
+        assertThat(loan.isPresent()).isTrue();
     }
 
     @Test
@@ -88,7 +129,7 @@ public class LoanProviderTest {
 
     @Test
     public void testMoreThanOneLenderWithOffer() {
-        BigDecimal rateExpected = BigDecimal.valueOf(2.0);
+        BigDecimal rateExpected = BigDecimal.valueOf(2.2);
         BigDecimal amountRequestedExpected = BigDecimal.valueOf(1500);
         List<LenderData> marketData = new ArrayList<LenderData>() {{
             add(new LenderData("Martin", BigDecimal.valueOf(0.03), BigDecimal.valueOf(400)));

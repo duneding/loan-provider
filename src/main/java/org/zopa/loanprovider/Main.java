@@ -27,7 +27,7 @@ public class Main {
             final String marketFileParam = args[0];
             final BigDecimal loanAmountParam = new BigDecimal(args[1]);
 
-            if (isValidAmount(loanAmountParam)) {
+            if (isValidAmount(loanAmountParam) && isBetweenMinMax(loanAmountParam)) {
                 try {
                     Optional<Loan> loan = getLoan(marketFileParam, loanAmountParam);
                     Printer.printResult(loan);
@@ -38,7 +38,8 @@ public class Main {
                     Printer.printError("Error reading market data file");
                 }
             } else {
-                Printer.printError(format("Amount requested must be between {0} and {1}", MIN_AMOUNT, MAX_AMOUNT));
+                Printer.printError(format("Amount requested must be between {0} and {1}", String.valueOf(MIN_AMOUNT), String.valueOf(MAX_AMOUNT)));
+                Printer.printError("Amount requested must be for 100 increment");
             }
 
         } else {
@@ -47,10 +48,13 @@ public class Main {
 
     }
 
-    private static boolean isValidAmount(BigDecimal amount) {
-        //TODO: validate amount MOD 100
+    private static boolean isBetweenMinMax(BigDecimal amount) {
         return amount.compareTo(BigDecimal.valueOf(MIN_AMOUNT)) >= 0 &&
                 amount.compareTo(BigDecimal.valueOf(MAX_AMOUNT)) <= 0;
+    }
+
+    private static boolean isValidAmount(BigDecimal amount) {
+        return amount.remainder(BigDecimal.valueOf(100)) == BigDecimal.valueOf(0);
     }
 
     public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException, ParseException {

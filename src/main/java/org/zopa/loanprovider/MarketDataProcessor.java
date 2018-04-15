@@ -54,6 +54,8 @@ public class MarketDataProcessor {
 
     /**
      * Collect all lenders until get the amount requested.
+     * TODO: substract amount given for each lender.
+     * Currently it is not updating available money. It assumes other external process should do it.
      *
      * @param amountRequested
      * @return
@@ -66,9 +68,11 @@ public class MarketDataProcessor {
         BigDecimal borrowed;
         BigDecimal diff;
 
+        // Iterate over the lenders until reach the total amount.
         for (int i = 0; i < marketData.size() && amountCollector.compareTo(amountRequested) < 0; i++) {
             lenderData = marketData.get(i);
             available = lenderData.getAvailable();
+
             if (amountCollector.add(available).compareTo(amountRequested) == 1) {
                 diff = amountCollector
                         .add(available)
@@ -96,7 +100,9 @@ public class MarketDataProcessor {
         return lendersCollector
                 .entrySet()
                 .stream()
-                .map(data -> data.getValue().divide(amountRequested, BigDecimal.ROUND_HALF_DOWN).multiply(data.getKey().getRate()))
+                .map(data -> data.getValue()
+                        .divide(amountRequested, 4, BigDecimal.ROUND_CEILING)
+                        .multiply(data.getKey().getRate()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
