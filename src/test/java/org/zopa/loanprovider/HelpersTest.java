@@ -2,7 +2,6 @@ package org.zopa.loanprovider;
 
 import java.io.*;
 import java.math.BigDecimal;
-import java.text.ParseException;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,8 +18,9 @@ public class HelpersTest {
     }
 
     public static void assertLoanFor(List<LenderData> marketData, BigDecimal rateExpected, BigDecimal amountRequestedExpected) {
-        MarketDataProcessor marketDataProcessor = new MarketDataProcessor(marketData);
-        Optional<Loan> loan = marketDataProcessor.findLoanFor(amountRequestedExpected, 36);
+
+        LoanProcessor loanProcessor = new LoanProcessor(marketData, new FrenchAmortizationMethod());
+        Optional<Loan> loan = loanProcessor.findLoanFor(amountRequestedExpected, 36);
 
         if (rateExpected == null) {
             assertThat(loan).isEmpty();
@@ -64,9 +64,8 @@ public class HelpersTest {
         return temporaryFile.getPath();
     }
 
-    public static void assertErrorConsoleMessages(String error, String[] args) throws IOException {
-        StringBuffer sb = new StringBuffer();
-        sb.append(error);
+    public static void assertErrorConsoleMessages(String error, String[] args) {
+        StringBuilder sb = new StringBuilder().append(error);
         String expectedErrorMessage = sb.toString();
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));

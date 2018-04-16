@@ -11,14 +11,11 @@ public class LoanComparator {
     /**
      * Comparator of rate ascending to offer best loan.
      */
-    public static Comparator<LenderData> byRate = new Comparator<LenderData>() {
-        @Override
-        public int compare(LenderData a, LenderData b) {
-            if (a.getRate() == b.getRate()) {
-                return a.getAvailable().compareTo(b.getAvailable());
-            } else {
-                return a.getRate().compareTo(b.getRate());
-            }
+    public static final Comparator<LenderData> byRate = (LenderData left, LenderData right) -> {
+        if (left.getRate().equals(right.getRate())) {
+            return left.getAvailable().compareTo(right.getAvailable());
+        } else {
+            return left.getRate().compareTo(right.getRate());
         }
     };
 

@@ -21,7 +21,7 @@ public class LoanProviderTest {
 
     private String marketDataFilePath;
     @Rule
-    public ExpectedException exception = ExpectedException.none();
+    public final ExpectedException exception = ExpectedException.none();
 
     @Before
     public void setUp() {
@@ -121,8 +121,8 @@ public class LoanProviderTest {
     @Test
     public void testEmptyMarket() {
         List<LenderData> marketData = new ArrayList<>();
-        MarketDataProcessor marketDataProcessor = new MarketDataProcessor(marketData);
-        assertThat(marketDataProcessor.findLoanFor(BigDecimal.valueOf(800), 36)).isEmpty();
+        LoanProcessor loanProcessor = new LoanProcessor(marketData, new FrenchAmortizationMethod());
+        assertThat(loanProcessor.findLoanFor(BigDecimal.valueOf(800), 36)).isEmpty();
     }
 
     @Test
@@ -254,6 +254,15 @@ public class LoanProviderTest {
     @Test
     public void testMarketDaraFileEmpty() throws IOException {
         assertThat(FileReader.getMarketData(createTemporalFile())).isEmpty();
+    }
+
+    @Test
+    public void testFrenchAmortizationMethod() {
+        AmortizationMethod amortizationMethod = new FrenchAmortizationMethod();
+        BigDecimal rate = new BigDecimal(0.05);
+        BigDecimal amount = new BigDecimal(1000);
+        BigDecimal payment = amortizationMethod.calculateMonthlyPayment(rate, amount, 36);
+        assertThat(payment.setScale(2, BigDecimal.ROUND_CEILING)).isEqualTo(BigDecimal.valueOf(29.98));
     }
 
 }

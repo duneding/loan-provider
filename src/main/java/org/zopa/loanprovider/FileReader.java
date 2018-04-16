@@ -37,7 +37,7 @@ public class FileReader {
         return lenders;
     }
 
-    private static ThrowingFunction<String, LenderData> mapToLender = (line) -> {
+    private static final ThrowingFunction<String, LenderData> mapToLender = (line) -> {
         String[] values = line.split(COMMA);
         if (values.length == 3) {
             String name = values[0];

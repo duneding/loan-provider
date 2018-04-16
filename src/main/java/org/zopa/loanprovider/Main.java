@@ -15,9 +15,9 @@ import static java.text.MessageFormat.format;
 public class Main {
 
     //This should be config from file or other source to be more flexible
-    private static int DEFAULT_MONTHS = 36;
-    private static int MIN_AMOUNT = 1000;
-    private static int MAX_AMOUNT = 15000;
+    private static final int DEFAULT_MONTHS = 36;
+    private static final int MIN_AMOUNT = 1000;
+    private static final int MAX_AMOUNT = 15000;
 
     public static void main(String[] args) {
 
@@ -59,12 +59,13 @@ public class Main {
     }
 
     private static boolean isValidAmount(BigDecimal amount) {
-        return amount.remainder(BigDecimal.valueOf(100)) == BigDecimal.valueOf(0);
+        return amount.remainder(BigDecimal.valueOf(100)).equals(BigDecimal.valueOf(0));
     }
 
     public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException {
         List<LenderData> marketData = FileReader.getMarketData(marketFile);
-        MarketDataProcessor processor = new MarketDataProcessor(marketData);
+        AmortizationMethod amortizationMethod = new FrenchAmortizationMethod();
+        LoanProcessor processor = new LoanProcessor(marketData, amortizationMethod);
         return processor.findLoanFor(amount, DEFAULT_MONTHS);
     }
 

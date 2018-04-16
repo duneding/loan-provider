@@ -10,12 +10,14 @@ import java.util.Optional;
  * Currently only provide a single datasource (file).
  * The idea is enable get data from other sources.
  */
-public class MarketDataProcessor {
+public class LoanProcessor {
 
     private final List<LenderData> marketData;
+    private final AmortizationMethod amortizationMethod;
 
-    public MarketDataProcessor(List<LenderData> marketData) {
+    public LoanProcessor(List<LenderData> marketData, AmortizationMethod amortizationMethod) {
         this.marketData = marketData;
+        this.amortizationMethod = amortizationMethod;
     }
 
     public Optional<Loan> findLoanFor(BigDecimal amount, int months) {
@@ -30,7 +32,7 @@ public class MarketDataProcessor {
 
     private boolean sufficientOffers(List<LenderData> marketData, BigDecimal amountRequested) {
         BigDecimal totalAvailable = marketData.stream()
-                .map(data -> data.getAvailable())
+                .map(LenderData::getAvailable)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         return totalAvailable.compareTo(amountRequested) >= 0;
@@ -47,7 +49,7 @@ public class MarketDataProcessor {
     private Loan calculateLoanFor(BigDecimal amountRequested, int months) {
         Map<LenderData, BigDecimal> bestLenders = collectLendersFor(amountRequested);
         BigDecimal loanRate = calculateShareRate(bestLenders, amountRequested);
-        BigDecimal monthtlyPayment = calculateMonthlyPayment(loanRate, amountRequested, months);
+        BigDecimal monthtlyPayment = amortizationMethod.calculateMonthlyPayment(loanRate, amountRequested, months);
         BigDecimal totalRepayment = monthtlyPayment.multiply(BigDecimal.valueOf(months));
         return new Loan(amountRequested, loanRate, monthtlyPayment, totalRepayment);
     }
@@ -104,22 +106,6 @@ public class MarketDataProcessor {
                         .divide(amountRequested, 4, BigDecimal.ROUND_CEILING)
                         .multiply(data.getKey().getRate()))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
-    }
-
-    /**
-     * French method to amortizing loan (monthly payment fixed).
-     *
-     * @param rate
-     * @param amount
-     * @return
-     */
-    private BigDecimal calculateMonthlyPayment(BigDecimal rate, BigDecimal amount, int months) {
-        BigDecimal monthlyRate = rate.divide(BigDecimal.valueOf(12), BigDecimal.ROUND_CEILING);
-        BigDecimal pow = monthlyRate.add(BigDecimal.valueOf(1)).pow(months);
-        BigDecimal factor = pow
-                .multiply(monthlyRate)
-                .divide(pow.subtract(BigDecimal.valueOf(1)), BigDecimal.ROUND_CEILING);
-        return amount.multiply(factor);
     }
 
 }
