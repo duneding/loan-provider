@@ -25,26 +25,31 @@ public class Main {
 
             final String marketFileParam = args[0];
             final BigDecimal loanAmountParam;
+
             try {
                 loanAmountParam = new BigDecimal(args[1]);
+
+                if (isValidAmount(loanAmountParam) && isBetweenMinMax(loanAmountParam)) {
+
+                    // I/O blocking read. For other kind of app (not console) should be use async read
+                    List<LenderData> marketData = FileReader.getMarketData(marketFileParam);
+                    Optional<Loan> loan = getLoan(marketData, loanAmountParam);
+                    Printer.printResult(loan);
+
+                } else {
+                    Printer.printError(format("Amount requested must be between {0} and {1}", String.valueOf(MIN_AMOUNT), String.valueOf(MAX_AMOUNT)));
+                    Printer.printError("Amount requested must be for 100 increment");
+                }
+
             } catch (NumberFormatException e) {
                 Printer.printError("Amount parameter must be a number");
                 throw new NumberFormatException();
-            }
-
-            if (isValidAmount(loanAmountParam) && isBetweenMinMax(loanAmountParam)) {
-                try {
-                    Optional<Loan> loan = getLoan(marketFileParam, loanAmountParam);
-                    Printer.printResult(loan);
-                } catch (IOException e) {
-                    //It should use a logging library (ej. log4j)
-                    Printer.printError("Error loading market data");
-                } catch (RuntimeException e) {
-                    Printer.printError("Error reading market data file");
-                }
-            } else {
-                Printer.printError(format("Amount requested must be between {0} and {1}", String.valueOf(MIN_AMOUNT), String.valueOf(MAX_AMOUNT)));
-                Printer.printError("Amount requested must be for 100 increment");
+            } catch (IOException e) {
+                Printer.printError("Error loading market data");
+            } catch (ArithmeticException e) {
+                Printer.printError(e.getMessage());
+            } catch (RuntimeException e) {
+                Printer.printError(e.getMessage());
             }
 
         } else {
@@ -62,8 +67,7 @@ public class Main {
         return amount.remainder(BigDecimal.valueOf(100)).equals(BigDecimal.valueOf(0));
     }
 
-    public static Optional<Loan> getLoan(String marketFile, BigDecimal amount) throws IOException {
-        List<LenderData> marketData = FileReader.getMarketData(marketFile);
+    public static Optional<Loan> getLoan(List<LenderData> marketData, BigDecimal amount) throws IOException {
         AmortizationMethod amortizationMethod = new FrenchAmortizationMethod();
         LoanProcessor processor = new LoanProcessor(marketData, amortizationMethod);
         return processor.findLoanFor(amount, DEFAULT_MONTHS);

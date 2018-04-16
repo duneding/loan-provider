@@ -57,7 +57,7 @@ public class FileReader {
             try {
                 return applyThrows(t);
             } catch (ParseException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(e.getMessage());
             }
         }
 

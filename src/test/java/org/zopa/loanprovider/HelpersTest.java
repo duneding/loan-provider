@@ -64,13 +64,26 @@ public class HelpersTest {
         return temporaryFile.getPath();
     }
 
-    public static void assertErrorConsoleMessages(String error, String[] args) {
-        StringBuilder sb = new StringBuilder().append(error);
-        String expectedErrorMessage = sb.toString();
+    public static void assertOutConsoleMessages(String message, String[] params) {
+        ByteArrayOutputStream outContent = new ByteArrayOutputStream();
+        System.setOut(new PrintStream(outContent));
+        assertConsoleMessages(params, outContent, buildMessageExpected(message));
+    }
+
+    public static void assertErrorConsoleMessages(String message, String[] params) {
         ByteArrayOutputStream outContent = new ByteArrayOutputStream();
         System.setErr(new PrintStream(outContent));
-        Main.main(args);
-        assertThat(outContent.toString()).contains(expectedErrorMessage);
+        assertConsoleMessages(params, outContent, buildMessageExpected(message));
+    }
+
+    private static void assertConsoleMessages(String[] params, ByteArrayOutputStream outContent, String expectedMessage) {
+        Main.main(params);
+        assertThat(outContent.toString()).contains(expectedMessage);
+    }
+
+    private static String buildMessageExpected(String message) {
+        StringBuilder sb = new StringBuilder().append(message);
+        return sb.toString();
     }
 
 }

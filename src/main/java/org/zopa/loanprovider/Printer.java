@@ -7,6 +7,7 @@ import static java.text.MessageFormat.format;
 
 /**
  * Centralize all message interface between users and calculator
+ * It should use a logging library (ej. log4j)
  */
 public class Printer {
 

@@ -99,13 +99,17 @@ public class LoanProcessor {
      * @return
      */
     private BigDecimal calculateShareRate(Map<LenderData, BigDecimal> lendersCollector, BigDecimal amountRequested) {
-        return lendersCollector
-                .entrySet()
-                .stream()
-                .map(data -> data.getValue()
-                        .divide(amountRequested, 4, BigDecimal.ROUND_CEILING)
-                        .multiply(data.getKey().getRate()))
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        try {
+            return lendersCollector
+                    .entrySet()
+                    .stream()
+                    .map(data -> data.getValue()
+                            .divide(amountRequested, 4, BigDecimal.ROUND_CEILING)
+                            .multiply(data.getKey().getRate()))
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+        } catch (ArithmeticException e) {
+            throw new ArithmeticException("Error calculating money-weighted rate");
+        }
     }
 
 }
